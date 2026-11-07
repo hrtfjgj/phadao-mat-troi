@@ -1,0 +1,7 @@
+node_modules/
+config.json
+sessions.json
+out.log
+err.log
+*.log
+.DS_Store

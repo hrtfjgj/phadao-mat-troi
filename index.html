@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phá đảo mặt trời</title>
+<style>
+  :root{
+    --bg:#0a0d12; --panel:#12161d; --panel2:#0f131a; --line:#232a35; --line2:#2c3644;
+    --txt:#e7edf4; --dim:#8b97a6; --dim2:#5c6675;
+    --green:#16c784; --red:#ea3943; --gold:#f0b90b; --blue:#3b82f6;
+    --green-dim:rgba(22,199,132,.14); --red-dim:rgba(234,57,67,.14); --gold-dim:rgba(240,185,11,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(1200px 600px at 70% -10%, #141b26 0%, var(--bg) 55%) fixed; color:var(--txt);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased;}
+  .mono{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;}
+  .wrap{max-width:1240px;margin:0 auto;padding:16px 18px 40px}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 2px 16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;
+    background:linear-gradient(135deg,#f0b90b,#f97316);box-shadow:0 6px 22px rgba(240,185,11,.28);color:#1a1200}
+  .brand-name{font-size:19px;font-weight:800;letter-spacing:.2px}
+  .brand-sub{font-size:12px;color:var(--dim);margin-top:2px}
+  .top-right{display:flex;align-items:center;gap:10px}
+  .badge{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;
+    border:1px solid var(--line);background:var(--panel);color:var(--dim)}
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+  .badge.on{color:var(--green);border-color:rgba(22,199,132,.4);background:rgba(22,199,132,.08)}
+  .badge.on .dot{background:var(--green);box-shadow:0 0 10px var(--green)}
+  .muted{color:var(--dim);font-size:12px}
+
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
+  .panel{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);border:1px solid var(--line);
+    border-radius:16px;padding:16px;position:relative;overflow:hidden}
+  .panel h3{margin:0 0 2px;font-size:13px;font-weight:700;letter-spacing:.3px;color:#cdd7e3;display:flex;align-items:center;gap:8px}
+  .panel .sub{font-size:11px;color:var(--dim2);margin-bottom:10px}
+
+  .phase{grid-column:span 7}
+  .side{grid-column:span 5;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .chart-sum{grid-column:span 7}
+  .chart-side{grid-column:span 5;display:grid;gap:14px}
+  .ribbon{grid-column:span 12}
+  .tablewrap{grid-column:span 12}
+
+  .tile{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:12px 13px}
+  .tile .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+  .tile .v{font-size:22px;font-weight:800;margin-top:6px;line-height:1}
+  .tile .h{font-size:11px;color:var(--dim2);margin-top:6px}
+  .up{color:var(--green)} .down{color:var(--red)} .gold{color:var(--gold)}
+
+  .phase .ph-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .ph-label{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+  .ph-main{font-size:40px;font-weight:900;line-height:1.05;margin-top:6px;letter-spacing:.5px}
+  .ph-sub{font-size:13px;color:var(--dim);margin-top:8px}
+  .ph-sid{text-align:right}
+  .ph-sid .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+  .ph-sid .v{font-size:26px;font-weight:800;margin-top:4px}
+  .bar{height:10px;border-radius:8px;background:#1a212b;overflow:hidden;margin-top:16px;border:1px solid var(--line)}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f0b90b,#f97316);transition:width .95s linear}
+
+  canvas{display:block;width:100%}
+  .cv-sum{height:200px}
+  .cv-bal{height:150px}
+  .cv-dist{height:150px}
+
+  .ribbon .pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .pill{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:800;color:#04120c}
+  .pill.t{background:var(--green);color:#03150d}
+  .pill.x{background:var(--red);color:#200608}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin-top:10px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line)}
+  th{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  tr:last-child td{border-bottom:none}
+  td.t{color:var(--green);font-weight:800}
+  td.x{color:var(--red);font-weight:800}
+  .dice{letter-spacing:3px;color:#c7d2df}
+  .api{font-size:12px;color:var(--dim)}
+  .api code{background:#0c1017;border:1px solid var(--line);padding:2px 7px;border-radius:7px;color:var(--gold);font-family:ui-monospace,monospace}
+
+  @media (max-width:900px){
+    .phase,.side,.chart-sum,.chart-side{grid-column:span 12}
+    .side{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">☀</div>
+      <div>
+        <div class="brand-name">Phá đảo mặt trời</div>
+        <div class="brand-sub">Developer: quoctoan07-vn</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span id="status" class="badge"><span class="dot"></span><span id="statusText">đang kết nối…</span></span>
+      <span class="muted mono" id="updated">—</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="panel phase">
+      <div class="ph-head">
+        <div>
+          <div class="ph-label" id="phLabel">Đang tải…</div>
+          <div class="ph-main mono" id="phMain">—</div>
+          <div class="ph-sub" id="phSub">—</div>
+        </div>
+        <div class="ph-sid">
+          <div class="k">Phiên</div>
+          <div class="v mono" id="phSid">—</div>
+        </div>
+      </div>
+      <div class="bar"><i id="bar"></i></div>
+    </section>
+
+    <section class="side">
+      <div class="tile"><div class="k">Tổng phiên</div><div class="v mono" id="tTotal">0</div><div class="h" id="tWindow">toàn bộ</div></div>
+      <div class="tile"><div class="k">TÀI · tổng</div><div class="v mono up" id="tTai">0</div><div class="h mono" id="tTaiPct">0%</div></div>
+      <div class="tile"><div class="k">XỈU · tổng</div><div class="v mono down" id="tXiu">0</div><div class="h mono" id="tXiuPct">0%</div></div>
+      <div class="tile"><div class="k">Chuỗi hiện tại</div><div class="v mono gold" id="tStreak">0</div><div class="h" id="tStreakType">—</div></div>
+    </section>
+
+    <section class="panel chart-sum">
+      <h3>Tổng xúc xắc</h3>
+      <canvas id="cvSum" class="cv-sum"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--green)"></i>TÀI</span>
+        <span><i style="background:var(--red)"></i>XỈU</span>
+        <span><i style="background:var(--gold)"></i>Ngưỡng 10.5</span>
+        <span class="mono" id="avgTotal"></span>
+      </div>
+    </section>
+
+    <section class="chart-side">
+      <div class="panel">
+        <h3>Cân bằng TÀI / XỈU</h3>
+        <canvas id="cvBal" class="cv-bal"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Phân bố tổng</h3>
+        <canvas id="cvDist" class="cv-dist"></canvas>
+      </div>
+    </section>
+
+    <section class="panel ribbon">
+      <h3>Nhịp cầu gần nhất</h3>
+      <div class="sub">100 phiên (cũ → mới)</div>
+      <div class="pills" id="pills"></div>
+    </section>
+
+    <section class="panel tablewrap">
+      <h3>Phiên gần nhất</h3>
+      <div class="sub">Cập nhật trực tiếp</div>
+      <table>
+        <thead><tr><th>Phiên</th><th>Xúc xắc</th><th>Tổng</th><th>KQ</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="4" class="muted">Chưa có dữ liệu…</td></tr></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="api" style="margin-top:16px">
+    API cho AI agent: <code>GET /api/ai</code> · trạng thái đầy đủ: <code>GET /api/state</code> · lịch sử: <code>GET /api/sessions?limit=200</code> · stream: <code>GET /events</code>
+  </div>
+</div>
+
+<script>
+let S = null;
+const $ = (id) => document.getElementById(id);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+
+function setupCanvas(cv){
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const w = cv.clientWidth || 300, h = cv.clientHeight || 150;
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx,w,h};
+}
+
+function drawSum(cv, sums){
+  const {ctx,w,h}=setupCanvas(cv);
+  if(!sums || !sums.length) return;
+  const padL=30,padR=14,padT=12,padB=16;
+  const x0=padL,x1=w-padR,y0=padT,y1=h-padB;
+  const min=3,max=18;
+  const X=(i)=> sums.length<=1?(x0+x1)/2: x0+(x1-x0)*i/(sums.length-1);
+  const Y=(v)=> y0+(y1-y0)*(1-(v-min)/(max-min));
+
+  ctx.strokeStyle='#1c2531'; ctx.fillStyle='#5c6675'; ctx.lineWidth=1; ctx.font='10px ui-monospace,monospace';
+  [3,6,9,12,15,18].forEach(v=>{ const y=Y(v); ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke(); ctx.fillText(String(v),4,y+3); });
+
+  const yt=Y(10.5);
+  ctx.save(); ctx.setLineDash([5,5]); ctx.strokeStyle='rgba(240,185,11,.55)'; ctx.beginPath(); ctx.moveTo(x0,yt); ctx.lineTo(x1,yt); ctx.stroke(); ctx.restore();
+  ctx.fillStyle='#f0b90b'; ctx.fillText('10.5', x1-30, yt-4);
+
+  const grad=ctx.createLinearGradient(0,y0,0,y1);
+  grad.addColorStop(0,'rgba(240,185,11,.22)'); grad.addColorStop(1,'rgba(240,185,11,0)');
+  ctx.beginPath(); ctx.moveTo(X(0),Y(sums[0]));
+  for(let i=1;i<sums.length;i++) ctx.lineTo(X(i),Y(sums[i]));
+  ctx.lineTo(X(sums.length-1),y1); ctx.lineTo(X(0),y1); ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+
+  ctx.beginPath(); ctx.moveTo(X(0),Y(sums[0]));
+  for(let i=1;i<sums.length;i++) ctx.lineTo(X(i),Y(sums[i]));
+  ctx.strokeStyle='#f0b90b'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+
+  for(let i=0;i<sums.length;i++){
+    const t=sums[i]>10;
+    ctx.beginPath(); ctx.arc(X(i),Y(sums[i]),2.6,0,Math.PI*2);
+    ctx.fillStyle=t?'#16c784':'#ea3943'; ctx.fill();
+  }
+  const li=sums.length-1, lv=sums[li];
+  ctx.fillStyle=lv>10?'#16c784':'#ea3943';
+  ctx.font='bold 12px ui-monospace,monospace';
+  const label=String(lv);
+  const lx=clamp(X(li)+6,0,w-24), ly=clamp(Y(lv)-8,12,h-4);
+  ctx.fillText(label,lx,ly);
+}
+
+function drawBalance(cv, bal){
+  const {ctx,w,h}=setupCanvas(cv);
+  if(!bal || !bal.length) return;
+  const padL=10,padR=10,padT=10,padB=10;
+  const x0=padL,x1=w-padR,y0=padT,y1=h-padB;
+  let m=1; for(const v of bal) m=Math.max(m,Math.abs(v)); m=Math.ceil(m*1.15);
+  const X=(i)=> x0+(x1-x0)*i/Math.max(1,bal.length-1);
+  const Y=(v)=> y0+(y1-y0)*(1-(v+m)/(2*m));
+  const Y0=Y(0);
+  ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle='#33404f'; ctx.beginPath(); ctx.moveTo(x0,Y0); ctx.lineTo(x1,Y0); ctx.stroke(); ctx.restore();
+
+  ctx.beginPath(); ctx.moveTo(X(0),Y(bal[0]));
+  for(let i=1;i<bal.length;i++) ctx.lineTo(X(i),Y(bal[i]));
+  ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+
+  ctx.beginPath(); ctx.moveTo(X(0),Y0);
+  for(let i=0;i<bal.length;i++) ctx.lineTo(X(i),Y(bal[i]));
+  ctx.lineTo(X(bal.length-1),Y0); ctx.closePath();
+  ctx.fillStyle='rgba(59,130,246,.12)'; ctx.fill();
+
+  const last=bal[bal.length-1];
+  ctx.fillStyle= last>=0?'#16c784':'#ea3943';
+  ctx.font='bold 12px ui-monospace,monospace';
+  ctx.fillText((last>=0?'+':'')+last, clamp(X(bal.length-1)-6,0,w-24), clamp(Y(last)-6,12,h-4));
+}
+
+function drawDist(cv, dist){
+  const {ctx,w,h}=setupCanvas(cv);
+  const keys=[]; for(let s=3;s<=18;s++) keys.push(s);
+  let max=1; keys.forEach(k=>{ max=Math.max(max, dist[k]||0); });
+  const padL=8,padR=8,padT=10,padB=16;
+  const x0=padL,x1=w-padR,y0=padT,y1=h-padB;
+  const bw=(x1-x0)/keys.length;
+  ctx.font='9px ui-monospace,monospace';
+  keys.forEach((k,idx)=>{
+    const v=dist[k]||0;
+    const bh=(y1-y0)*(v/max);
+    const x=x0+idx*bw+1.5, y=y1-bh, ww=bw-3;
+    ctx.fillStyle = k<=10 ? 'rgba(234,57,67,.75)' : 'rgba(22,199,132,.75)';
+    ctx.fillRect(x,y,ww,bh);
+    ctx.fillStyle='#5c6675';
+    if(idx%1===0) ctx.fillText(String(k), x, y1+11);
+  });
+  ctx.save(); ctx.setLineDash([3,3]); ctx.strokeStyle='rgba(240,185,11,.4)';
+  const tx=x0+bw*7.5; ctx.beginPath(); ctx.moveTo(tx,y0); ctx.lineTo(tx,y1); ctx.stroke(); ctx.restore();
+}
+
+function render(){
+  if(!S) return;
+  const on = !!S.connected;
+  $('status').className = 'badge' + (on?' on':'');
+  $('statusText').textContent = on ? 'LIVE' : 'mất kết nối';
+  $('updated').textContent = new Date().toLocaleTimeString('vi-VN');
+
+  const st=S.stats||{}; const c=(st.counts&&st.counts.all)||{tai:0,xiu:0};
+  $('tTotal').textContent = st.totalSessions!=null?st.totalSessions:0;
+  $('tTai').textContent = c.tai; $('tXiu').textContent = c.xiu;
+  const tot=c.tai+c.xiu||1;
+  $('tTaiPct').textContent = (c.tai*100/tot).toFixed(1)+'%  ·  '+c.tai+'/'+tot;
+  $('tXiuPct').textContent = (c.xiu*100/tot).toFixed(1)+'%  ·  '+c.xiu+'/'+tot;
+  const cs=st.currentStreak||{length:0,type:null};
+  $('tStreak').textContent = cs.length||0;
+  $('tStreakType').textContent = cs.type ? ('liên tiếp '+(cs.type==='TAI'?'TÀI':'XỈU')) : '—';
+  $('avgTotal').textContent = st.averageTotal!=null?(('TB tổng: '+st.averageTotal)):'';
+
+  const p=S.phase;
+  if(!p){ $('phLabel').textContent='ĐANG CHỜ'; $('phMain').textContent='—'; $('phSub').textContent=''; $('bar').style.width='0%'; }
+  else {
+    $('phSid').textContent = p.sid!=null?p.sid:'—';
+    if(p.name==='BETTING'){
+      $('phLabel').textContent='ĐANG CƯỢC';
+      $('phMain').textContent = p.secondsLeft+'s';
+      $('phSub').textContent = 'chờ kết quả phiên '+p.sid;
+      $('phMain').className='ph-main mono gold';
+      $('bar').style.width = ((50-p.secondsLeft)/50*100).toFixed(0)+'%';
+    } else if(p.name==='SETTLE'){
+      const kq = p.result==='TAI'?'TÀI':'XỈU';
+      $('phLabel').textContent='VỪA RA';
+      $('phMain').textContent = kq;
+      $('phMain').className='ph-main mono '+(p.result==='TAI'?'up':'down');
+      $('phSub').textContent = (p.dice||[]).join(', ') + '  ·  phiên mới sau ' + p.secondsLeft + 's';
+      $('bar').style.width = ((20-p.secondsLeft)/20*100).toFixed(0)+'%';
+    } else {
+      $('phLabel').textContent='ĐANG ĐỒNG BỘ';
+      $('phMain').textContent='…'; $('phSub').textContent=''; $('bar').style.width='0%';
+    }
+  }
+
+  const seq = (st.sequence||'').split('');
+  $('pills').innerHTML = seq.map(ch=>'<span class="pill '+(ch==='T'?'t':'x')+'">'+ch+'</span>').join('');
+
+  const rows=(S.latest||[]).slice().sort((a,b)=>b.sid-a.sid);
+  $('rows').innerHTML = rows.length? rows.map(r=>{
+    const t=r.result==='TAI'; const kq=t?'TÀI':'XỈU';
+    return '<tr><td class="mono">'+r.sid+'</td><td class="dice mono">'+[r.d1,r.d2,r.d3].join(', ')+'</td><td class="mono">'+r.total+'</td><td class="'+(t?'t':'x')+'">'+kq+'</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="muted">Chưa có dữ liệu…</td></tr>';
+
+  drawSum($('cvSum'), st.sums||[]);
+  drawBalance($('cvBal'), st.balance||[]);
+  drawDist($('cvDist'), st.distribution||{});
+}
+
+async function load(){
+  try{ const r=await fetch('/api/state',{cache:'no-store'}); S=await r.json(); render(); }catch(e){}
+}
+load();
+setInterval(load, 1000);
+window.addEventListener('resize', ()=>{ if(S) render(); });
+
+function connectSSE(){
+  try{
+    const es=new EventSource('/events');
+    es.onmessage=(ev)=>{ try{ const m=JSON.parse(ev.data); if(m.type==='hello'){S=m.data;render();} else {load();} }catch(e){} };
+    es.onerror=()=>{ es.close(); setTimeout(connectSSE,3000); };
+  }catch(e){}
+}
+connectSSE();
+</script>
+</body>
+</html>

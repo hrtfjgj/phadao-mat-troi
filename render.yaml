@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: phadao-mat-troi
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: REFRESH_TOKEN
+        sync: false
+      - key: ID_BASE
+        value: https://api.azhkthg1.net/id/
+      - key: WS_BASE
+        value: wss://websocket.azhkthg1.net/wsbinary

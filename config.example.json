@@ -1,0 +1,6 @@
+{
+  "PORT": 3000,
+  "ID_BASE": "https://api.azhkthg1.net/id/",
+  "REFRESH_TOKEN": "DAN_REFRESH_TOKEN_VAO_DAY_HOAC_DAT_BIEN_MOI_TRUONG",
+  "WS_BASE": "wss://websocket.azhkthg1.net/wsbinary"
+}

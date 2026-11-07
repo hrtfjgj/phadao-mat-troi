@@ -1,0 +1,14 @@
+{
+  "name": "sunwin-taixiu-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Realtime Sunwin Tai Xiu mini results feed + web",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@msgpack/msgpack": "^3.0.0",
+    "ws": "^8.18.0"
+  }
+}
